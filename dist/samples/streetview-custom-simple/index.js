@@ -47,6 +47,7 @@ function getCustomPanorama(pano) {
       },
     };
   }
+
   return null;
 }
 // [END maps_streetview_custom_simple]

@@ -35,6 +35,7 @@ function initMap() {
             place.formatted_address +
             "</div>"
         );
+
         infowindow.open(map, this);
       });
     }
