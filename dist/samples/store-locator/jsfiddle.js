@@ -1,4 +1,6 @@
 let map;
+let originalMapTypeId;
+let detailMapTypeId;
 let autocomplete;
 let autocompleteInput;
 let distanceMatrixService;
@@ -9,10 +11,14 @@ const stores = [];
 // Initialize and add the map
 function initMap() {
   distanceMatrixService = new google.maps.DistanceMatrixService();
+  originalMapTypeId = google.maps.MapTypeId.ROADMAP;
+  detailMapTypeId = google.maps.MapTypeId.HYBRID;
   map = new google.maps.Map(document.getElementById("map"), {
     center: { lat: 39.79, lng: -104.98 },
+    mapTypeId: originalMapTypeId,
     zoom: 10,
   });
+
   new mdc.textField.MDCTextField(document.querySelector(".mdc-text-field"));
   autocompleteInput = document.getElementById("search-input");
   autocomplete = new google.maps.places.Autocomplete(autocompleteInput, {});
@@ -32,11 +38,12 @@ function initMap() {
           stores.push({ name, location: { lat, lng }, address: "" });
           const marker = new google.maps.Marker({ position: { lat, lng } });
           marker.addListener("click", () => {
-            update(new google.maps.LatLng({ lat, lng }));
+            seeDetail(new google.maps.LatLng({ lat, lng }));
           });
           markers.push(marker);
         }
       );
+
       new MarkerClusterer(map, markers, {
         imagePath:
           "https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m",
@@ -103,7 +110,7 @@ function renderCards(stores) {
         card
           .querySelector(".mdc-card__primary-action")
           .addEventListener("click", () => {
-            map.panTo(location);
+            seeDetail(new google.maps.LatLng(location));
           });
         cardsDiv.appendChild(card);
       }
@@ -152,6 +159,8 @@ function update(location) {
   autocompleteInput.disabled = true;
   isUpdateInProgress = true;
   map.setCenter(location);
+  map.setZoom(10);
+  map.setMapTypeId(originalMapTypeId);
   // reset values
   stores.forEach((store) => {
     delete store.travelDistance;
@@ -189,4 +198,19 @@ function update(location) {
       autocompleteInput.disabled = false;
       isUpdateInProgress = false;
     });
+}
+
+function seeDetail(location) {
+  update(location);
+  map.setZoom(19);
+  map.setMapTypeId(detailMapTypeId);
+  map.setTilt(45);
+  map.addListener("zoom_changed", () => {
+    const newZoom = map.getZoom();
+
+    if (newZoom < 19) {
+      map.setTilt(0);
+      map.setMapTypeId(originalMapTypeId);
+    }
+  });
 }
